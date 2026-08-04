@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>许佳豪的 AI 进阶之路</title>
+</head>
+<body>
+  <div class="container">
+    <header class="header">
+      <div class="header-top">
+        <h1>🤖 许佳豪的 AI 进阶之路</h1>
+        <p class="subtitle">每天记录一点，积少成多</p>
+      </div>
+      <div class="stats">
+        <span id="stat-count">已记录 0 条笔记</span>
+        <span id="stat-streak">连续学习 0 天</span>
+      </div>
+    </header>
+
+    <main>
+      <section class="add-note">
+        <h2>✏️ 添加新笔记</h2>
+        <form id="note-form">
+          <div class="form-group">
+            <label for="note-date">日期</label>
+            <input type="date" id="note-date" required>
+          </div>
+          <div class="form-group">
+            <label for="note-title">标题</label>
+            <input type="text" id="note-title" placeholder="今天学了什么？" required>
+          </div>
+          <div class="form-group">
+            <label for="note-category">分类</label>
+            <select id="note-category">
+              <option value="🧠 基础概念">🧠 基础概念</option>
+              <option value="🤖 模型学习">🤖 模型学习</option>
+              <option value="💻 实践操作">💻 实践操作</option>
+              <option value="📚 工具使用">📚 工具使用</option>
+              <option value="💡 心得体会">💡 心得体会</option>
+              <option value="🔗 资源推荐">🔗 资源推荐</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="note-content">笔记内容</label>
+            <textarea id="note-content" rows="5" placeholder="写下你今天的收获..." required></textarea>
+          </div>
+          <button type="submit" class="btn-submit">📝 保存笔记</button>
+        </form>
+      </section>
+
+      <section class="notes-list">
+        <h2>📖 我的笔记</h2>
+        <div class="filter-bar">
+          <button class="filter-btn active" data-filter="all">全部</button>
+          <button class="filter-btn" data-filter="🧠 基础概念">🧠 基础概念</button>
+          <button class="filter-btn" data-filter="🤖 模型学习">🤖 模型学习</button>
+          <button class="filter-btn" data-filter="💻 实践操作">💻 实践操作</button>
+          <button class="filter-btn" data-filter="📚 工具使用">📚 工具使用</button>
+          <button class="filter-btn" data-filter="💡 心得体会">💡 心得体会</button>
+          <button class="filter-btn" data-filter="🔗 资源推荐">🔗 资源推荐</button>
+        </div>
+        <div id="notes-container" class="notes-container">
+          <p class="empty-state">还没有笔记，快去添加第一条吧！🚀</p>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <p>坚持学习，AI 世界等你探索！💪</p>
+    </footer>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
