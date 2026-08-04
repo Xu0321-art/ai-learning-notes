@@ -4,34 +4,43 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>许佳豪的 AI 进阶之路</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <div class="container">
     <header class="header">
-      <div class="header-top">
+      <div class="header-content">
         <h1>🤖 许佳豪的 AI 进阶之路</h1>
-        <p class="subtitle">每天记录一点，积少成多</p>
+        <p class="subtitle">每天记录一点，积少成多，让学习可视化 🚀</p>
       </div>
-      <div class="stats">
-        <span id="stat-count">已记录 0 条笔记</span>
-        <span id="stat-streak">连续学习 0 天</span>
+      <div class="stats-row">
+        <div class="stat-card">
+          <span class="stat-label">累计笔记</span>
+          <span class="stat-value" id="stat-count">0</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-label">连续学习</span>
+          <span class="stat-value" id="stat-streak">0天</span>
+        </div>
       </div>
     </header>
 
     <main>
       <section class="add-note">
-        <h2>✏️ 添加新笔记</h2>
+        <div class="section-title">📝 添加新笔记</div>
         <form id="note-form">
-          <div class="form-group">
-            <label for="note-date">日期</label>
-            <input type="date" id="note-date" required>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="note-date">📅 日期</label>
+              <input type="date" id="note-date" required>
+            </div>
+            <div class="form-group">
+              <label for="note-title">🏷️ 标题</label>
+              <input type="text" id="note-title" placeholder="比如：Transformer 原理初步理解" required>
+            </div>
           </div>
           <div class="form-group">
-            <label for="note-title">标题</label>
-            <input type="text" id="note-title" placeholder="今天学了什么？" required>
-          </div>
-          <div class="form-group">
-            <label for="note-category">分类</label>
+            <label for="note-category">🏷️ 分类</label>
             <select id="note-category">
               <option value="🧠 基础概念">🧠 基础概念</option>
               <option value="🤖 模型学习">🤖 模型学习</option>
@@ -42,32 +51,32 @@
             </select>
           </div>
           <div class="form-group">
-            <label for="note-content">笔记内容</label>
-            <textarea id="note-content" rows="5" placeholder="写下你今天的收获..." required></textarea>
+            <label for="note-content">💭 笔记内容</label>
+            <textarea id="note-content" rows="5" placeholder="写下今天的收获... 例如：今天学习了注意力机制的基本原理..." required></textarea>
           </div>
-          <button type="submit" class="btn-submit">📝 保存笔记</button>
+          <button type="submit" class="btn-primary">✨ 保存笔记</button>
         </form>
       </section>
 
       <section class="notes-list">
-        <h2>📖 我的笔记</h2>
+        <div class="section-title">📖 我的笔记库 <span class="filter-count" id="filter-count">(全部)</span></div>
+        
         <div class="filter-bar">
           <button class="filter-btn active" data-filter="all">全部</button>
-          <button class="filter-btn" data-filter="🧠 基础概念">🧠 基础概念</button>
-          <button class="filter-btn" data-filter="🤖 模型学习">🤖 模型学习</button>
-          <button class="filter-btn" data-filter="💻 实践操作">💻 实践操作</button>
-          <button class="filter-btn" data-filter="📚 工具使用">📚 工具使用</button>
-          <button class="filter-btn" data-filter="💡 心得体会">💡 心得体会</button>
-          <button class="filter-btn" data-filter="🔗 资源推荐">🔗 资源推荐</button>
+          <button class="filter-btn" data-filter="🧠 基础概念">基础概念</button>
+          <button class="filter-btn" data-filter="🤖 模型学习">模型学习</button>
+          <button class="filter-btn" data-filter="💻 实践操作">实践操作</button>
+          <button class="filter-btn" data-filter="📚 工具使用">工具使用</button>
+          <button class="filter-btn" data-filter="💡 心得体会">心得体会</button>
+          <button class="filter-btn" data-filter="🔗 资源推荐">资源推荐</button>
         </div>
-        <div id="notes-container" class="notes-container">
-          <p class="empty-state">还没有笔记，快去添加第一条吧！🚀</p>
-        </div>
+
+        <div id="notes-container" class="notes-container"></div>
       </section>
     </main>
 
     <footer class="footer">
-      <p>坚持学习，AI 世界等你探索！💪</p>
+      <p>💪 坚持学习，AI 世界等你探索！</p>
     </footer>
   </div>
 
