@@ -1,14 +1,22 @@
-// 笔记数据管理
-const STORAGE_KEY = 'ai-learning-notes';
+const STORAGE_KEY = 'ai-learning-notes-notes-v2';
 
 function getNotes() {
-  const data = localStorage.getItem(STORAGE_KEY);
-  return data ? JSON.parse(data) : [];
+  try {
+    const data = localStorage.getItem(STORAGE_KEY);
+    return data ? JSON.parse(data) : [];
+  } catch (e) {
+    console.error('读取笔记失败', e);
+    return [];
+  }
 }
 
 function saveNotes(notes) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(notes));
-  updateStats();
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(notes));
+    updateStats();
+  } catch (e) {
+    console.error('保存笔记失败', e);
+  }
 }
 
 function addNote(note) {
@@ -16,24 +24,29 @@ function addNote(note) {
   notes.unshift({ ...note, id: Date.now() });
   saveNotes(notes);
   renderNotes();
+  animateCardEntry();
 }
 
 function deleteNote(id) {
   let notes = getNotes();
-  notes = notes.filter(n => n.id !== id);
-  saveNotes(notes);
-  renderNotes();
+  const note = notes.find(n => n.id === id);
+  if (note) {
+    if (confirm('确定要删除这条笔记吗？\n\n"' + note.title + '"')) {
+      notes = notes.filter(n => n.id !== id);
+      saveNotes(notes);
+      renderNotes();
+    }
+  }
 }
 
 function updateStats() {
   const notes = getNotes();
   const countEl = document.getElementById('stat-count');
   const streakEl = document.getElementById('stat-streak');
+  const filterCountEl = document.getElementById('filter-count');
   
-  countEl.textContent = '已记录 ' + notes.length + ' 条笔记';
-  
-  const streak = calculateStreak(notes);
-  streakEl.textContent = '连续学习 ' + streak + ' 天';
+  if (countEl) countEl.textContent = notes.length;
+  if (streakEl) streakEl.textContent = calculateStreak(notes) + '天';
 }
 
 function calculateStreak(notes) {
@@ -43,7 +56,7 @@ function calculateStreak(notes) {
   if (uniqueDates.length === 0) return 0;
   
   const today = new Date();
-  today.setHours(0,0,0,0);
+  today.setHours(0, 0, 0, 0);
   const todayStr = today.toISOString().split('T')[0];
   
   let streak = 0;
@@ -67,21 +80,29 @@ function formatDate(date) {
 
 function renderNotes(filter = 'all') {
   const container = document.getElementById('notes-container');
-  const notes = getNotes();
+  const filterCountEl = document.getElementById('filter-count');
   
+  if (!container || !filterCountEl) return;
+  
+  const notes = getNotes();
   const filtered = filter === 'all' 
     ? notes 
     : notes.filter(n => n.category === filter);
   
+  filterCountEl.textContent = filter === 'all' ? '(全部)' : `(${filtered.length})`;
+  
   if (filtered.length === 0) {
-    container.innerHTML = '<p class="empty-state">还没有笔记，快去添加第一条吧！🚀</p>';
+    const empty = filter === 'all' 
+      ? '<p class="empty-state">还没有笔记，快去添加第一条吧！🚀</p>'
+      : `<p class="empty-state">这个分类下还没有笔记，试试其他分类吧！</p>`;
+    container.innerHTML = empty;
     return;
   }
   
   container.innerHTML = filtered.map(note => `
     <div class="note-card">
       <div class="note-actions">
-        <button class="btn-delete" onclick="deleteNote(${note.id})" title="删除">🗑️</button>
+        <button class="btn-delete" onclick="deleteNote(${note.id})" title="删除笔记">🗑️</button>
       </div>
       <div class="note-header">
         <span class="note-date">📅 ${note.date}</span>
@@ -99,6 +120,60 @@ function escapeHtml(text) {
   return div.innerHTML;
 }
 
+function animateCardEntry() {
+  const cards = document.querySelectorAll('.note-card');
+  cards.forEach((card, index) => {
+    card.style.animationDelay = `${index * 50}ms`;
+  });
+}
+
+// Toast 提示
+function showToast(message, type = 'success') {
+  const colors = {
+    success: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+    info: 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)',
+    warning: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)'
+  };
+  
+  const toast = document.createElement('div');
+  toast.className = 'toast';
+  toast.textContent = message;
+  toast.style.cssText = `
+    position: fixed;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%) translateY(100px);
+    background: ${colors[type] || colors.success};
+    color: white;
+    padding: 14px 28px;
+    border-radius: 12px;
+    font-size: 1rem;
+    font-weight: 500;
+    z-index: 10000;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    animation: slideUpToast 0.3s ease-out forwards;
+  `;
+  document.body.appendChild(toast);
+  
+  setTimeout(() => {
+    toast.style.animation = 'fadeOutToast 0.3s ease-out forwards';
+    setTimeout(() => toast.remove(), 300);
+  }, 2500);
+}
+
+// 添加 Toast 动画样式
+const toastStyle = document.createElement('style');
+toastStyle.textContent = `
+  @keyframes slideUpToast {
+    to { transform: translateX(-50%) translateY(0); }
+  }
+  @keyframes fadeOutToast {
+    to { opacity: 0; transform: translateX(-50%) translateY(20px); }
+  }
+`;
+document.head.appendChild(toastStyle);
+
+// 初始化
 document.addEventListener('DOMContentLoaded', () => {
   const today = new Date().toISOString().split('T')[0];
   document.getElementById('note-date').value = today;
@@ -120,7 +195,7 @@ document.addEventListener('DOMContentLoaded', () => {
       addNote(note);
       e.target.reset();
       document.getElementById('note-date').value = today;
-      showToast('笔记已保存！✨');
+      showToast('✨ 笔记已保存成功！', 'success');
     }
   });
   
@@ -133,35 +208,5 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 });
 
-function showToast(message) {
-  const toast = document.createElement('div');
-  toast.textContent = message;
-  toast.style.cssText = `
-    position: fixed;
-    bottom: 30px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: var(--accent);
-    color: white;
-    padding: 12px 24px;
-    border-radius: 10px;
-    font-size: 0.95rem;
-    z-index: 1000;
-    animation: fadeInUp 0.3s ease;
-  `;
-  document.body.appendChild(toast);
-  setTimeout(() => {
-    toast.style.opacity = '0';
-    toast.style.transition = 'opacity 0.3s';
-    setTimeout(() => toast.remove(), 300);
-  }, 2000);
-}
-
-const style = document.createElement('style');
-style.textContent = `
-  @keyframes fadeInUp {
-    from { opacity: 0; transform: translate(-50%, 20px); }
-    to { opacity: 1; transform: translate(-50%, 0); }
-  }
-`;
-document.head.appendChild(style);
+// 全局暴露给按钮调用
+window.deleteNote = deleteNote;
