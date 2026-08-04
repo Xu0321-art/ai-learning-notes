@@ -55,11 +55,11 @@
             <textarea id="note-content" rows="5" placeholder="写下今天的收获... 例如：今天学习了注意力机制的基本原理..." required></textarea>
           </div>
 
-          <!-- 新增：文件上传区域 -->
+          <!-- 文件上传区域（融入整体设计） -->
           <div class="file-upload-section">
             <label>📎 添加附件（图片/文档）</label>
             <div class="file-input-wrapper">
-              <input type="file" id="file-input" accept="image/*,.doc,.docx,.pdf,.txt,.csv,.xlsx,.ppt,.pptz" multiple>
+              <input type="file" id="file-input" accept="image/*,.doc,.docx,.pdf,.txt,.csv,.xlsx" multiple style="display:none">
               <button class="btn-file-select" onclick="document.getElementById('file-input').click()">选择文件</button>
             </div>
             <div class="file-list" id="file-list"></div>
