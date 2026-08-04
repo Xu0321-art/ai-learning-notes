@@ -47,6 +47,7 @@ function updateStats() {
   
   if (countEl) countEl.textContent = notes.length;
   if (streakEl) streakEl.textContent = calculateStreak(notes) + '天';
+  if (filterCountEl) updateFilterCount(filterCountEl, notes, 'all');
 }
 
 function calculateStreak(notes) {
@@ -78,6 +79,13 @@ function formatDate(date) {
   return date.toISOString().split('T')[0];
 }
 
+function updateFilterCount(el, notes, filter) {
+  const filtered = filter === 'all' 
+    ? notes 
+    : notes.filter(n => n.category === filter);
+  el.textContent = `(${filtered.length})`;
+}
+
 function renderNotes(filter = 'all') {
   const container = document.getElementById('notes-container');
   const filterCountEl = document.getElementById('filter-count');
@@ -89,7 +97,7 @@ function renderNotes(filter = 'all') {
     ? notes 
     : notes.filter(n => n.category === filter);
   
-  filterCountEl.textContent = filter === 'all' ? '(全部)' : `(${filtered.length})`;
+  updateFilterCount(filterCountEl, notes, filter);
   
   if (filtered.length === 0) {
     const empty = filter === 'all' 
@@ -99,19 +107,39 @@ function renderNotes(filter = 'all') {
     return;
   }
   
-  container.innerHTML = filtered.map(note => `
-    <div class="note-card">
-      <div class="note-actions">
-        <button class="btn-delete" onclick="deleteNote(${note.id})" title="删除笔记">🗑️</button>
+  container.innerHTML = filtered.map(note => {
+    const attachmentsHtml = note.attachments && note.attachments.length > 0
+      ? `
+        <div class="note-attachments">
+          <div style="font-size:0.85rem;color:#64748b;margin-bottom:8px;">📎 附件 (${note.attachments.length})</div>
+          ${note.attachments.map(att => `
+            <div class="note-attachment">
+              ${att.type.startsWith('image/') ? 
+                `<img src="${att.data}" alt="${att.name}" onerror="this.style.display='none'">` : 
+                `<span>📄</span>`
+              }
+              <span>${att.name}</span>
+              ${att.type.startsWith('image/') ? '' : `<a href="${att.url}" target="_blank" download>下载</a>`}
+            </div>
+          `).join('')}
+        </div>
+      ` : '';
+    
+    return `
+      <div class="note-card">
+        <div class="note-actions">
+          <button class="btn-delete" onclick="deleteNote(${note.id})" title="删除笔记">🗑️</button>
+        </div>
+        <div class="note-header">
+          <span class="note-date">📅 ${note.date}</span>
+          <span class="note-category">${note.category}</span>
+        </div>
+        <h3 class="note-title">${escapeHtml(note.title)}</h3>
+        <p class="note-content">${escapeHtml(note.content)}</p>
+        ${attachmentsHtml}
       </div>
-      <div class="note-header">
-        <span class="note-date">📅 ${note.date}</span>
-        <span class="note-category">${note.category}</span>
-      </div>
-      <h3 class="note-title">${escapeHtml(note.title)}</h3>
-      <p class="note-content">${escapeHtml(note.content)}</p>
-    </div>
-  `).join('');
+    `;
+  }).join('');
 }
 
 function escapeHtml(text) {
@@ -125,6 +153,67 @@ function animateCardEntry() {
   cards.forEach((card, index) => {
     card.style.animationDelay = `${index * 50}ms`;
   });
+}
+
+// ========== 文件上传管理 ==========
+let selectedFiles = [];
+
+document.getElementById('file-input').addEventListener('change', (e) => {
+  const files = Array.from(e.target.files);
+  selectedFiles = [...selectedFiles, ...files];
+  updateFileList();
+});
+
+function updateFileList() {
+  const fileListEl = document.getElementById('file-list');
+  if (!fileListEl || selectedFiles.length === 0) {
+    fileListEl.innerHTML = '';
+    return;
+  }
+  
+  fileListEl.innerHTML = selectedFiles.map((file, index) => {
+    const icon = file.type.startsWith('image/') ? '🖼️' : 
+                 file.type.includes('word') || file.name.endsWith('.docx') ? '📄' :
+                 file.type.includes('pdf') ? '📕' : '📎';
+    return `
+      <div class="file-item">
+        <span>${icon}</span>
+        <span title="${file.name}">${file.name}</span>
+        <span class="file-remove" onclick="removeFile(${index})" title="移除">✕</span>
+      </div>
+    `;
+  }).join('');
+}
+
+function removeFile(index) {
+  selectedFiles.splice(index, 1);
+  updateFileList();
+}
+
+// 将文件转为 Base64（图片）或保留 URL（其他文件）
+async function processAttachments(files) {
+  const attachments = [];
+  
+  for (const file of files) {
+    const reader = new FileReader();
+    
+    await new Promise((resolve) => {
+      reader.onload = (e) => {
+        const isImage = file.type.startsWith('image/');
+        attachments.push({
+          name: file.name,
+          type: file.type,
+          size: file.size,
+          data: isImage ? e.target.result : null,
+          url: isImage ? e.target.result : file.name // 相对路径，用于下载
+        });
+        resolve();
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+  
+  return attachments;
 }
 
 // Toast 提示
@@ -164,12 +253,8 @@ function showToast(message, type = 'success') {
 // 添加 Toast 动画样式
 const toastStyle = document.createElement('style');
 toastStyle.textContent = `
-  @keyframes slideUpToast {
-    to { transform: translateX(-50%) translateY(0); }
-  }
-  @keyframes fadeOutToast {
-    to { opacity: 0; transform: translateX(-50%) translateY(20px); }
-  }
+  @keyframes slideUpToast { to { transform: translateX(-50%) translateY(0); } }
+  @keyframes fadeOutToast { to { opacity: 0; transform: translateX(-50%) translateY(20px); } }
 `;
 document.head.appendChild(toastStyle);
 
@@ -181,20 +266,42 @@ document.addEventListener('DOMContentLoaded', () => {
   renderNotes();
   updateStats();
   
-  document.getElementById('note-form').addEventListener('submit', (e) => {
+  document.getElementById('note-form').addEventListener('submit', async (e) => {
     e.preventDefault();
     
     const note = {
       date: document.getElementById('note-date').value,
       title: document.getElementById('note-title').value.trim(),
       category: document.getElementById('note-category').value,
-      content: document.getElementById('note-content').value.trim()
+      content: document.getElementById('note-content').value.trim(),
+      attachments: []
     };
     
     if (note.title && note.content) {
+      if (selectedFiles.length > 0) {
+        const processBtn = document.querySelector('.btn-primary');
+        const originalText = processBtn.textContent;
+        processBtn.textContent = '⏳ 处理文件...';
+        processBtn.disabled = true;
+        
+        try {
+          note.attachments = await processAttachments(selectedFiles);
+        } catch (err) {
+          showToast('文件处理失败，请重试', 'warning');
+          processBtn.textContent = originalText;
+          processBtn.disabled = false;
+          return;
+        }
+        
+        processBtn.textContent = originalText;
+        processBtn.disabled = false;
+      }
+      
       addNote(note);
       e.target.reset();
       document.getElementById('note-date').value = today;
+      selectedFiles = [];
+      updateFileList();
       showToast('✨ 笔记已保存成功！', 'success');
     }
   });
@@ -210,3 +317,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // 全局暴露给按钮调用
 window.deleteNote = deleteNote;
+window.removeFile = (index) => {
+  selectedFiles.splice(index, 1);
+  updateFileList();
+};
